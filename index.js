@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import mongoose from "mongoose";
+import bcrypt from "bcryptjs";
 
 const app = express();
 app.use(express.json());
@@ -47,10 +48,12 @@ app.post("/register", (req, res) => {
     if (user) {
       res.send({ message: "User already registerd" });
     } else {
+      bcrypt.hash(password, 12)
+      .then(hashedpassword => {
       const user = new User({
         name,
         email,
-        password,
+        password:hashedpassword,
       });
       user.save((err) => {
         if (err) {
@@ -59,6 +62,7 @@ app.post("/register", (req, res) => {
           res.send({ message: "Successfully Registered, Please login now." });
         }
       });
+    })
     }
   });
 });
