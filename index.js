@@ -2,10 +2,11 @@ import express from "express";
 import cors from "cors";
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
+import { OAuth2Client } from "google-auth-library";
 
 const app = express();
 app.use(express.json());
-app.use(express.urlencoded());
+app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 
 mongoose.connect(
@@ -26,6 +27,8 @@ const userSchema = new mongoose.Schema({
 });
 
 const User = new mongoose.model("User", userSchema);
+
+const client = new OAuth2Client("1011870679214-0vnm9tq196n9roo85bej42d92cv39n06.apps.googleusercontent.com");
 
 app.post("/login", (req, res) => {
   const { email, password } = req.body;
@@ -66,6 +69,43 @@ app.post("/register", (req, res) => {
     }
   });
 });
+
+
+
+
+app.post('/googlelogin', (req,res) => {
+  const {tokenId} = req.body;
+
+  client.verifyIdToken({idToken: tokenId, audience: "1011870679214-0vnm9tq196n9roo85bej42d92cv39n06.apps.googleusercontent.com"}).then(res => {
+    const {email_verified, name, email} = res.payload;
+    if(email_verified) {
+      User.findOne({email: email}, (err, user) => {
+        if(err) {
+          res.send({message: "Something went wrong..."})
+        } else {
+          if(user){
+            res.send({ message: "User already registerd",  user: user });
+          } else {
+            let password = user.password;
+            let newUser = new User ({name, email, password});
+            newUser.save((err, data) => {
+              if (err) {
+                res.send({message: "Something went wrong..."})
+              } else {
+                if(data){
+                  res.send({ message: "User registerd",  newUser: newUser });
+                }
+              }
+            })
+          }
+        }
+      }
+    )}
+  })
+  console.log()
+})
+
+
 
 app.listen(9002, () => {
   console.log("BE started at port 9002");
