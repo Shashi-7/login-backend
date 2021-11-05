@@ -84,7 +84,8 @@ app.post('/googlelogin', (req,res) => {
           res.send({message: "Something went wrong..."})
         } else {
           if(user){
-            res.send({ message: "User already registerd",  user: user });
+           if  (password === user.password) {
+            res.send({ message: "User already registerd",  user: data });
           } else {
             let password = user.password;
             let newUser = new User ({name, email, password});
@@ -98,7 +99,7 @@ app.post('/googlelogin', (req,res) => {
               }
             })
           }
-        }
+        }}
       }
     )}
   })
